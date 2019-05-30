@@ -1,0 +1,18 @@
+export default {
+  'menu.home': 'Home',
+  'menu.login': 'Login',
+  'menu.register': 'Register',
+  'menu.register.result': 'Register Result',
+  'menu.market': 'AI Market',
+  'menu.market.modelmarket': 'Model Market',
+  'menu.market.datamarket': 'Data Market',
+  'menu.automl': 'AutoML',
+  'menu.datalabeling': 'Data Labeling',
+  'menu.datamanagement': 'Data Management',
+  'menu.devenviron': 'DevEnviron',
+  'menu.trainingjobs': 'Training Jobs',
+  'menu.modelmanagement': 'Model Management',
+  'menu.servicedeployment': 'Service Deployment',
+  'menu.settings': 'Settings',
+  'menu.sqlflow': 'SQLFlow',
+};
