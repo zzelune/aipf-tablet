@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom';
 import { connect } from 'dva';
 import router from 'umi/router';
 import { FormattedMessage } from 'umi-plugin-react/locale';
-import { Menu ,Layout,List,Input,Button,Card,Row,Col} from 'antd';
+import { Menu ,Layout,List,Input,Button,Card,Row,Col,Divider,Icon} from 'antd';
 import GridContent from '@/components/PageHeaderWrapper/GridContent';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
 import CommonTable from '@/components/CommonTable';
@@ -75,7 +75,8 @@ class DataManagement extends Component {
     ];
 
     const extraContent = (
-      <div className={styles.extraContent}>
+      <div style={{marginBottom:16}}>
+        
         <Input.Search style={{width: '100px'}} placeholder="请输入" onSearch={() => ({})} />
         <Button
               icon="plus"
@@ -94,13 +95,16 @@ class DataManagement extends Component {
       <Row type="flex" justify="space-between">
          <Col span={6}>
            <Button.Group>
-             <Button icon="plus" >创建数据集</Button>
+             <Button icon="plus" >添加文件</Button>
            </Button.Group>
          </Col>
-
-         <Col span={8} offset={10}>
-             <Input.Search placeholder="请输入" onSearch={() => ({})} style={{ marginRight: 8 ,width:200 }}/>
-             <Button icon="redo" />
+         <Col span={12} offset={6}>
+           <Row type="flex" justify="end">
+             <Col>
+              <Input.Search placeholder="请输入" onSearch={() => ({})} style={{ width:200 }}/>
+              <Button icon="redo" />
+              </Col>
+            </Row>
          </Col>
     </Row>);
 
@@ -108,33 +112,31 @@ class DataManagement extends Component {
 
       <PageHeaderWrapper title="数据管理">
         
-        <Layout style={{ background: '#fff' }}>
-        <Layout.Sider width={300} style={{ padding: '24px',background: '#fff' }}>
-        <Card
-            className={styles.listCard}
-            title='数据集'
-            bordered={false}
-            bodyStyle={{ padding: '0 10px 10px 10px' }}
-            extra={extraContent}
+        <Layout style={{ background: '#fff',padding :'24px' }}>
 
-
-          >
-            <List
+        <Layout.Sider width={240} style={{ background: '#fff',marginRight:'24px' }}>
+        {extraContent}
+        <div style={{border:'1px solid #e8e8e8',height:222, overflow: 'scroll'}}>
+        <List
               size="small"
-              split='false'
+              split={false}
               rowKey="id"
               loading={loading}
               dataSource={list}
               renderItem={item => (
-                <List.Item>
-                    <a href={item.href}>{item.title}</a>
+                <List.Item 
+                  actions={[<div ><a><Icon type="edit" className={styles.action}></Icon></a> <a><Icon type="delete" className={styles.action}></Icon></a></div> ]} 
+                  className={styles.item} 
+                  onClick={e=>{console.log(e)}}>
+                     {item.title}
                 </List.Item>
               )}
             />
-          </Card>
+        </div>
         </Layout.Sider>
-        <Layout.Content style={{ padding: '24px 0', minHeight: 280 }}>
+        <Layout.Content>
           <CommonTable
+              bordered
               operator = {operator}
               loading={loading}
               columns={columns}

@@ -1,4 +1,5 @@
 import React, { PureComponent, Fragment } from 'react';
+import { findDOMNode } from 'react-dom';
 import { connect } from 'dva';
 import moment from 'moment';
 import router from 'umi/router';
@@ -16,7 +17,8 @@ import {
   Dropdown,
   Steps,
   Select,
-  Menu
+  Menu,
+  DatePicker
 } from 'antd';
 import CommonTable from '@/components/CommonTable';
 import PageHeaderWrapper from '@/components/PageHeaderWrapper';
@@ -43,7 +45,7 @@ const status = ['关闭', '运行中', '已上线', '异常'];
   loading: loading.models.datalabel 
 }))
 
-
+@Form.create()
 class DataLabeling extends PureComponent {
   state = {
     modalVisible: false,
@@ -52,6 +54,11 @@ class DataLabeling extends PureComponent {
     selectedRows: [],
     formValues: {},
     stepFormValues: {},
+  };
+
+  formLayout = {
+    labelCol: { span: 7 },
+    wrapperCol: { span: 13 },
   };
 
   columns = [
@@ -120,6 +127,52 @@ class DataLabeling extends PureComponent {
     });
   }
 
+  showModal = () => {
+    this.setState({
+      visible: true,
+      current: undefined,
+    });
+  };
+
+  showEditModal = item => {
+    this.setState({
+      visible: true,
+      current: item,
+    });
+  };
+
+  handleCancel = () => {
+    setTimeout(() => this.addBtn.blur(), 0);
+    this.setState({
+      visible: false,
+    });
+  };
+
+  handleSubmit = e => {
+    e.preventDefault();
+    const { dispatch, form } = this.props;
+    const { current } = this.state;
+    const id = current ? current.id : '';
+
+    setTimeout(() => this.addBtn.blur(), 0);
+    form.validateFields((err, fieldsValue) => {
+      if (err) return;
+      dispatch({
+        type: 'list/submit',
+        payload: { id, ...fieldsValue },
+      });
+    });
+  };
+
+  deleteItem = id => {
+    const { dispatch } = this.props;
+    dispatch({
+      type: 'list/submit',
+      payload: { id },
+    });
+  };
+
+
   handleStandardTableChange = (pagination, filtersArg, sorter) => {
     const { dispatch } = this.props;
     const { formValues } = this.state;
@@ -160,7 +213,56 @@ class DataLabeling extends PureComponent {
       datalabel: { list },
       loading,
     } = this.props;
-    const { selectedRows, modalVisible, updateModalVisible, stepFormValues } = this.state;
+    const {
+      form: { getFieldDecorator },
+    } = this.props;
+    const { selectedRows, modalVisible, updateModalVisible, stepFormValues ,visible, current = {}} = this.state;
+ 
+
+    const getModalContent = () => {
+      return (
+        <Form onSubmit={this.handleSubmit}>
+          <FormItem label="任务名称" {...this.formLayout}>
+            {getFieldDecorator('title', {
+              rules: [{ required: true, message: '请输入任务名称' }],
+              initialValue: current.title,
+            })(<Input placeholder="请输入" />)}
+          </FormItem>
+          <FormItem label="开始时间" {...this.formLayout}>
+            {getFieldDecorator('createdAt', {
+              rules: [{ required: true, message: '请选择开始时间' }],
+              initialValue: current.createdAt ? moment(current.createdAt) : null,
+            })(
+              <DatePicker
+                showTime
+                placeholder="请选择"
+                format="YYYY-MM-DD HH:mm:ss"
+                style={{ width: '100%' }}
+              />
+            )}
+          </FormItem>
+          <FormItem label="任务负责人" {...this.formLayout}>
+            {getFieldDecorator('owner', {
+              rules: [{ required: true, message: '请选择任务负责人' }],
+              initialValue: current.owner,
+            })(
+              <Select placeholder="请选择">
+                <Option value="付晓晓">付晓晓</Option>
+                <Option value="周毛毛">周毛毛</Option>
+              </Select>
+            )}
+          </FormItem>
+          <FormItem {...this.formLayout} label="产品描述">
+            {getFieldDecorator('subDescription', {
+              rules: [{ message: '请输入至少五个字符的产品描述！', min: 5 }],
+              initialValue: current.subDescription,
+            })(<TextArea rows={4} placeholder="请输入至少五个字符" />)}
+          </FormItem>
+        </Form>
+      );
+    };
+
+    const modalFooter = { okText: '保存', onOk: this.handleSubmit, onCancel: this.handleCancel };
 
     const menu = (
       <Menu onClick={this.handleMenuClick} selectedKeys={[]}>
@@ -177,23 +279,32 @@ class DataLabeling extends PureComponent {
       <Row type="flex" justify="space-between">
          <Col span={6}>
            <Button.Group>
-             <Button icon="plus" >创建数据集</Button>
+              <Button 
+                icon="plus" 
+                onClick={this.showModal}
+                ref={component => {
+                /* eslint-disable */
+                    this.addBtn = findDOMNode(component);
+                /* eslint-enable */
+                 }}
+              >
+                创建数据集
+              </Button>
              {selectedRows.length > 0 && <Button icon="delete">删除</Button>}
            </Button.Group>
          </Col>
-
-         <Col span={6} offset={6}>
+         <Col span={12} offset={6}>
+           <Row type="flex" justify="end">
+             <Col>
               <Dropdown overlay={menu}>
               <Button>
                   所有类型 <Icon type="down" />
               </Button>
               </Dropdown>
-         </Col>
-         <Col span={5}>
-             <Input.Search placeholder="请输入" onSearch={() => ({})} style={{ marginRight: 8 }}/>
-         </Col>
-         <Col span={1}>
-             <Button icon="redo" />
+              <Input.Search placeholder="请输入" onSearch={() => ({})} style={{ width:200 }}/>
+              <Button icon="redo" />
+              </Col>
+            </Row>
          </Col>
     </Row>);
     
@@ -212,7 +323,19 @@ class DataLabeling extends PureComponent {
             />
           </div>
         </Card>
+        <Modal
+          title={`任务${current.id ? '编辑' : '添加'}`}
+          className={styles.standardListForm}
+          width={640}
+          bodyStyle={{ padding: '28px 0 0' }}
+          destroyOnClose
+          visible={visible}
+          {...modalFooter}
+        >
+          {getModalContent()}
+        </Modal>
       </PageHeaderWrapper>
+      
     );
   }
 }
